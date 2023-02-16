@@ -35,13 +35,13 @@ const startDate = new Date();
 
 // imports
 const commands = require("./../commands");
-const finnhub_commands = require("./../finnhub_commands");
+// const finnhub_commands = require("./../finnhub_commands");
 
 
 async function handleMessage(message, args, platformObject) {
   //sends all od the information plus references to the bots to our command handler
   //this can be further abstracted to multiple command handlers if desired
-  await finnhub_commands.finnhubClient;
+  // await finnhub_commands.finnhubClient;
 
   await commands.handle(message, args, platformObject, { telegram: TelegramBot });
 }
