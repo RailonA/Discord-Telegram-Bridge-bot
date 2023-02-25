@@ -1,93 +1,100 @@
 const fs = require("fs");
 const Telegram = require('node-telegram-bot-api');
-const fetch = require('cross-fetch');
+// const fetch = require('cross-fetch');
 
-
-// Or just: import 'cross-fetch/polyfill';
-
-fetch('//api.github.com/users/lquixada')
-  .then(res => {
-    if (res.status >= 400) {
-      throw new Error("Bad response from server");
-    }
-    return res.json();
-  })
-  .then(user => {
-    console.log(user);
-  })
-  .catch(err => {
-    console.error(err);
-  })
-.then((response) => {
-  console.log(`Received response: ${response.status}`);
-});
-
-console.log("Started request…");
 
 // replace the value below with the Telegram token you receive from @BotFather
 
-const tokens = JSON.parse(fs.readFileSync("./../tokens.json", "utf8"));
+const tokens = JSON.parse(fs.readFileSync("./tokens/tokens.json", "utf8"));
 
 // Create a TelegramBot that uses 'polling' to fetch new updates
 const TelegramBot = new Telegram(tokens.telegram, { polling: true });
 
 const startDate = new Date();
 
-// imports
-const commands = require("./../commands");
-// const finnhub_commands = require("./../finnhub_commands");
+// const commands = require("./../commands");
+const twitter_API = require("./../src/scripts/twitter_API");
+// const finnhub_API = require("./../src/scripts/finnhub_API");
 
-
-async function handleMessage(message, args, platformObject) {
-  //sends all od the information plus references to the bots to our command handler
-  //this can be further abstracted to multiple command handlers if desired
-  // await finnhub_commands.finnhubClient;
-
-  await commands.handle(message, args, platformObject, { telegram: TelegramBot });
+// console.log(twitter_API)
+async function getTweet() {
+  const k =  await twitter_API.tweet.get()
+  console.log(k)
 }
 
-// Matches "/echo [whatever]"
-TelegramBot.onText(/\/echo (.+)/, (message, match) => {
-  // 'message' is the received Message from Telegram
-  // 'match' is the result of executing the regexp above on the text content
-  // of the message
+try {
+  TelegramBot.on('message', async (message) => {
+    if (new Date(message.date * 1000) > startDate && message.text) {
+      console.log("Got a telegram message: " + message.text);
 
-  const chatId = message.chat.id;
-  const resp = match[1]; // the captured "whatever"
+      const chatId = message.chat.id;
 
-  // send back the matched "whatever" to the chat
-  TelegramBot.sendMessage(chatId, resp);
-});
+      //populate object with Telegram information
+      let plateformObject = {
+        platform: "telegram",
+        userID: message.from.id,
+        message: message,
+        chatID: message.chat.id
+      }
+      // let forexNewsTweets = await twitter_API;
+    // await twitter_API.tweet;
+    TelegramBot.sendMessage(chatId, 'NEW TWEET:');
+  //   console.log(twitter_API)
+  //  TelegramBot.sendMessage(chatId, twitter_API.tweet.get(),   { parse_mode: 'html' });
 
+  TelegramBot.sendMessage(chatId, getTweet());
 
-TelegramBot.on('message', async (message) => {
-  if (new Date(message.date * 1000) > startDate && message.text) {
-    console.log("Got a telegram message: " + message.text);
+   // send a message to the chat acknowledging receipt of their message
+      //Used to determine command and parameters
+      let args = message.text.toLowerCase().split(" ");
+      if (args[0].indexOf("@") > -1) {
+        // change /command@BotUserName to /command, really should check for equality with username
+        args[0] = args[0].split("@")[0]
+      }
 
-    const chatId = message.chat.id;
-
-    //populate object with Telegram information
-    let plateformObject = {
-      platform: "telegram",
-      userID: message.from.id,
-      message: message,
-      chatID: message.chat.id
+      return await handleMessage(message.text, args, plateformObject);
+    } else if (message.text) {
+      console.log("Skipping telegram message: " + message.text);
+      return null;
     }
-
-    // send a message to the chat acknowledging receipt of their message
-    TelegramBot.sendMessage(chatId, 'Received your message');
-
-    //Used to determine command and parameters
-    let args = message.text.toLowerCase().split(" ");
-    if (args[0].indexOf("@") > -1) {
-      // change /command@BotUserName to /command, really should check for equality with username
-      args[0] = args[0].split("@")[0]
-    }
+  })
+} catch (e) {
+  Rollbar.error("Something went wrong", e);
+  console.log("Something went wrong", e);
+}
 
 
-    return await handleMessage(message.text, args, plateformObject);
-  } else if (message.text) {
-    console.log("Skipping telegram message: " + message.text);
-    return null;
+const rwClient = require("./scripts/twitter_API.js");
+const cronJob = require("cron").CronJob;
+
+
+const forexNewsTweets = async () => {
+  
+  try {
+    const userTimeline = await rwClient.v1.userTimelineByUsername("@ForexLive");
+    const fetchedTweets = userTimeline.tweets;
+
+    console.log(fetchedTweets[0].full_text)
+
+    // for await (const tweet of fetchedTweets) {
+    //   const tweeted = tweet.full_text
+    //   console.log('TWEET: ' + tweeted);
+
+    // }
+
+  } catch (e) {
+    console.log(e)
+
   }
-})
+
+}
+
+forexNewsTweets()
+
+// Tweets every day at 10 am
+// const job = new cronJob(" * 10 * * *", () => {
+//   console.log("RUNNING")
+//   tweet()
+// })
+
+// job.start()
