@@ -10,34 +10,11 @@ const TelegramBot = new Telegram(tokens.telegram, { polling: true });
 const startDate = new Date();
 
 
-const forexNewsTweets = async () => {
-
-  try {
-    const userTimeline = await rwClient.v1.userTimelineByUsername("@ForexLive");
-    const fetchedTweets = userTimeline.tweets;
-
-    console.log(fetchedTweets[0].full_text)
-
-    // for await (const tweet of fetchedTweets) {
-    //   const tweeted = tweet.full_text
-    //   console.log('TWEET: ' + tweeted);
-
-    // }
-
-  } catch (e) {
-    console.log(e)
-
-  }
-
-}
-
-
 try {
   TelegramBot.on('message', async (message) => {
     if (new Date(message.date * 1000) > startDate && message.text) {
       console.log("Got a telegram message: " + message.text);
 
-      const chatId = message.chat.id;
 
       //populate object with Telegram information
       let plateformObject = {
@@ -47,9 +24,12 @@ try {
         chatID: message.chat.id
       }
 
-      TelegramBot.sendMessage(chatId, 'NEW TWEET:');
-      forexNewsTweets()
+      TelegramBot.sendMessage(plateformObject.chatID, 'NEW TWEET:');
+      // forexNewsTweets()
+      const userTimeline = await rwClient.v1.userTimelineByUsername("@ForexLive");
+      const fetchedTweets = userTimeline.tweets;
 
+      TelegramBot.sendMessage(plateformObject.chatID, fetchedTweets[0].full_text)
       // send a message to the chat acknowledging receipt of their message
       //Used to determine command and parameters
       let args = message.text.toLowerCase().split(" ");
