@@ -104,7 +104,7 @@ typings/
 .tern-port
 
 
-./src/tokens
-./src/tokens/telegram_tokens.json
-./src/tokens/twitter_tokens.json
-./src/tokens/tokens
+./../src/tokens
+./../src/tokens/telegram_tokens.json
+./../src/tokens/twitter_tokens.json
+./../src/tokens/tokens
