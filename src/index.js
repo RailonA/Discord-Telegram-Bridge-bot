@@ -43,7 +43,7 @@ try {
       let fetchedOldTweets = forexLiveTimeline.tweets;
 
       // Checking Twitter page 12 am for new tweet
-      let job = schedule.scheduleJob('30 * * * * *', async function () {
+      let job = schedule.scheduleJob('2 * * * * * *', async function () {
         // const forexLiveTimeline = await rwClient.v1.userTimelineByUsername("@ForexLive");
         let fetchedNewTweets = forexLiveTimeline.tweets;
         let getNewTweet = fetchedNewTweets[0].full_text;
