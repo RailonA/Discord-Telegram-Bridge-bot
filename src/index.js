@@ -3,8 +3,9 @@ const Telegram = require('node-telegram-bot-api');
 // const cronJob = require("cron").CronJob;
 const schedule = require('node-schedule');
 const rwClient = require("./scripts/twitter_API.js");
+const { Console } = require("console");
 
-const tokens = JSON.parse(fs.readFileSync("./tokens/tokens.json", "utf8"));
+const tokens = JSON.parse(fs.readFileSync("./tokens/telegram_token.json", "utf8"));
 
 // Create a TelegramBot that uses 'polling' to fetch new updates
 const TelegramBot = new Telegram(tokens.telegram, { polling: true });
@@ -39,21 +40,21 @@ try {
         chatID: message.chat.id
       }
 
-      const forexLiveTimeline = await rwClient.v1.userTimelineByUsername("@ForexLive");
-      let fetchedOldTweets = forexLiveTimeline.tweets;
+      let   currentweet = "";
 
       // Checking Twitter page 12 am for new tweet
-      let job = schedule.scheduleJob('30 * * * * *', async function () {
-        // const forexLiveTimeline = await rwClient.v1.userTimelineByUsername("@ForexLive");
-        let fetchedNewTweets = forexLiveTimeline.tweets;
-        let getNewTweet = fetchedNewTweets[0].full_text;
-
-        if (getNewTweet !== fetchedOldTweets) {
+      let job = schedule.scheduleJob(' 0 * * * *', async function () {
+        const forexLiveTimeline = await rwClient.v1.userTimelineByUsername("@ForexLive");
+        let tweetList = forexLiveTimeline.tweets;
+        let tweet = tweetList[0].full_text
+        
+        if (tweet !== currentweet) {
           TelegramBot.sendMessage(plateformObject.chatID, '@ForexLive Tweeted:');
-          TelegramBot.sendMessage(plateformObject.chatID, fetchedNewTweets[0].full_text)
-          fetchedOldTweets = getNewTweet
-        } else if (getNewTweet === fetchedOldTweets) {
-          console.log("DON'T PRINT OLD TWEET")
+          TelegramBot.sendMessage(plateformObject.chatID, tweet)
+          currentweet = tweet;
+          return currentweet
+        } else {
+          console.log("DONT PRINT ")
         }
       })
 

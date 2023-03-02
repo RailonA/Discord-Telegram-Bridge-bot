@@ -10,7 +10,7 @@
 const { TwitterApi } = require('twitter-api-v2')
 
 const fs = require("fs");
-const tokens = JSON.parse(fs.readFileSync("./tokens/twitter_tokens.json", "utf8"));
+const tokens = JSON.parse(fs.readFileSync("./tokens/twitter_token.json", "utf8"));
     
 const client = new TwitterApi({
   appKey: tokens.CONSUMER_KEY,
